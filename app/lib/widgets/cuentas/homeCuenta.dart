@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'calendar/calendar.dart';
+import 'calendar/calendar2.dart';
 import 'calendar/today.dart';
 
 class homeCuenta extends StatefulWidget {
-  final cuenta;
-  homeCuenta({Key key, this.cuenta}) : super(key: key);
+  final String cuenta;
+  final email;
+  homeCuenta({Key key, this.cuenta, this.email}) : super(key: key);
 
   @override
   _homeCuentaState createState() => _homeCuentaState();
@@ -12,9 +13,11 @@ class homeCuenta extends StatefulWidget {
 
 class _homeCuentaState extends State<homeCuenta> {
   int _currentIndex = 0;
-  final tabs = [today(), calendar()];
+
   @override
   Widget build(BuildContext context) {
+    final tabs = [calendar(cuenta: widget.cuenta), today(email: widget.email)];
+
     return Scaffold(
       appBar: AppBar(title: Text("${this.widget.cuenta}")),
       body: tabs[_currentIndex],
@@ -26,9 +29,14 @@ class _homeCuentaState extends State<homeCuenta> {
           });
         },
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.today), title: Text("Home")),
           BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), title: Text("Home"))
+            icon: Icon(Icons.today),
+            title: Text("Calendar"),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            title: Text("Settings"),
+          ),
         ],
       ),
     );

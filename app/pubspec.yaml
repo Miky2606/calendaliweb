@@ -45,7 +45,7 @@ flutter_icons:
   
   ios: true
   android: true
-  image_path: "icons/icon.png"
+  image_path: "icons/calend.png"
 
 dev_dependencies:
   flutter_test:

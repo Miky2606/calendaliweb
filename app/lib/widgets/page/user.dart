@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
@@ -36,21 +38,32 @@ class usuario extends StatelessWidget {
               return Card(
                   child: Container(
                       decoration: BoxDecoration(
-                          color: Colors.pink.withOpacity(.8),
+                          image: DecorationImage(
+                            image: NetworkImage(
+                              "https://calendaliweb.com/img/profile/${user[index]["imagen"]}",
+                            ),
+                          ),
+                          border: Border.all(
+                            color: Colors.pink,
+                            width: 2,
+                          ),
                           borderRadius: BorderRadius.circular(12)),
                       width: 170,
                       child: Stack(
                         children: [
                           InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => homeCuenta(
+                                      cuenta: user[index]["nombre"],
+                                      email: this.email)));
+                            },
+                          ),
+                          InkWell(
                               onTap: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => homeCuenta(
-                                        cuenta: user[index]["nombre"])));
+                                print("delete");
                               },
-                              child: SizedBox(
-                                  height: 200,
-                                  child: SvgPicture.asset(
-                                      "assets/images/hola.svg"))),
+                              child: Icon(Icons.delete)),
                           Align(
                               alignment: Alignment.bottomCenter,
                               child: Text(
@@ -58,7 +71,7 @@ class usuario extends StatelessWidget {
                                 style: TextStyle(
                                     fontFamily: "Indie",
                                     fontSize: 35,
-                                    color: Colors.pink[100]),
+                                    color: Colors.pink),
                               ))
                         ],
                       )));
