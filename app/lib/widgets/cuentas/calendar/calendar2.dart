@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:calendar_timeline/calendar_timeline.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class calendar extends StatefulWidget {
   final cuenta;
@@ -15,6 +16,11 @@ class calendar extends StatefulWidget {
 }
 
 class _calendarState extends State<calendar> {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      new FlutterLocalNotificationsPlugin();
+  var initializationSettingsAndroid;
+  var initializationSettingsIOS;
+  var initializationSettings;
   final scaffold = GlobalKey<ScaffoldState>();
   Map dayTask;
   List task;
@@ -23,6 +29,15 @@ class _calendarState extends State<calendar> {
 
   @override
   void initState() {
+    initializationSettingsAndroid =
+        new AndroidInitializationSettings('app_icon');
+    initializationSettingsIOS = new IOSInitializationSettings(
+        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: selectNotifications);
+
     getUser(_initialDate);
     super.initState();
   }
@@ -31,6 +46,36 @@ class _calendarState extends State<calendar> {
     if (mounted) {
       super.setState(fn);
     }
+  }
+
+  Future<void> notifications() async {
+    var android = AndroidNotificationDetails(
+        'channel_ID', 'vhannel_name', 'channel_description',
+        importance: Importance.Max, priority: Priority.High, ticker: "test");
+
+    var ios = IOSNotificationDetails();
+    var platform = NotificationDetails(android, ios);
+
+    await flutterLocalNotificationsPlugin.show(0, "hello", "message", platform,
+        payload: "test");
+  }
+
+  Future selectNotifications(String payload) async {
+    if (payload != null) {
+      print(payload);
+    }
+  }
+
+  Future onDidReceiveLocalNotification(
+      int id, String title, String body, String payload) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          AlertDialog(
+            title: Text(title),
+            content: Text(body),
+          );
+        });
   }
 
   Future<String> getUser(date) async {
@@ -46,6 +91,7 @@ class _calendarState extends State<calendar> {
       });
     } else {
       dayTask = json.decode(response.body);
+      notifications();
 
       setState(() {
         task = dayTask["profile"];
@@ -76,6 +122,11 @@ class _calendarState extends State<calendar> {
         SizedBox(
           height: 20,
         ),
+        RaisedButton(
+            onPressed: () {
+              notifications();
+            },
+            child: Icon(Icons.add)),
         FloatingActionButton(
             onPressed: () {
               showDialog(
@@ -124,35 +175,38 @@ class _calendarState extends State<calendar> {
                     shrinkWrap: true,
                     itemCount: task.length,
                     itemBuilder: (BuildContext context, int index) {
+                      final taskKey = task[index]["task"];
                       return Card(
-                          child: Container(
-                              padding: EdgeInsets.all(12),
-                              width: double.infinity,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.pink.withOpacity(.7)),
-                              child: Stack(
-                                children: [
-                                  Center(child: Text("${task[index]["task"]}")),
-                                  InkWell(
-                                      onTap: () {
-                                        deleteTarea(task[index]["id"]);
-                                      },
-                                      child: Icon(Icons.delete)),
-                                  InkWell(
-                                      onTap: () {
-                                        var datos = {
-                                          "id": task[index]["id"],
-                                          "task": task[index]["task"]
-                                        };
-                                        editTask(datos);
-                                      },
-                                      child: Align(
-                                          alignment: Alignment.topRight,
-                                          child: Icon(Icons.edit))),
-                                ],
-                              )));
+                          child: Dismissible(
+                              key: Key(taskKey),
+                              onDismissed: (direction) {
+                                deleteTarea(task[index]["id"]);
+                              },
+                              child: Container(
+                                  padding: EdgeInsets.all(12),
+                                  width: double.infinity,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.pink.withOpacity(.7)),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                          child:
+                                              Text("${task[index]["task"]}")),
+                                      InkWell(
+                                          onTap: () {
+                                            var datos = {
+                                              "id": task[index]["id"],
+                                              "task": task[index]["task"]
+                                            };
+                                            editTask(datos);
+                                          },
+                                          child: Align(
+                                              alignment: Alignment.topRight,
+                                              child: Icon(Icons.edit))),
+                                    ],
+                                  ))));
                     })),
       ],
     );
